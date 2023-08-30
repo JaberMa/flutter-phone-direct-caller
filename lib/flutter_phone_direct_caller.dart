@@ -14,4 +14,21 @@ class FlutterPhoneDirectCaller {
       },
     );
   }
+
+  static Future<CallDetails?> getCallDetails() async {
+    final Map<dynamic, dynamic> result = await _channel.invokeMethod('getCallDetails');
+    return CallDetails.fromMap(result);
+  }
+}
+
+class CallDetails {
+  final String? duration;
+
+  CallDetails({this.duration});
+
+  factory CallDetails.fromMap(Map<dynamic, dynamic> map) {
+    return CallDetails(
+      duration: map['duration'],
+    );
+  }
 }

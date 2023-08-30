@@ -45,6 +45,7 @@ internal class FlutterPhoneDirectCallerHandler :
     MethodCallHandler, RequestPermissionsResultListener {
     private var activityPluginBinding: ActivityPluginBinding? = null
     private var number: String? = null
+    private var startTime: Long? = null 
     private var flutterResult: MethodChannel.Result? = null
     fun setActivityPluginBinding(activityPluginBinding: ActivityPluginBinding) {
         this.activityPluginBinding = activityPluginBinding
@@ -63,7 +64,32 @@ internal class FlutterPhoneDirectCallerHandler :
             if (permissionStatus != 1) {
                 requestsPermission()
             } else {
-                result.success(callNumber(number))
+                val callResult = callNumber(number)
+                if (callResult) {
+                    // Store the call start time here
+                    startTime = System.currentTimeMillis()
+                }
+                result.success(callResult)
+            }
+        } else if (call.method == "getCallDetails") {
+            if (startTime != null) {
+                // Calculate call duration using the current time and start time
+                val currentTime = System.currentTimeMillis()
+                val durationMillis = currentTime - startTime!!
+
+                // Convert durationMillis to a human-readable format (hours, minutes, seconds)
+                val durationSeconds = durationMillis / 1000
+                val hours = durationSeconds / 3600
+                val minutes = (durationSeconds % 3600) / 60
+                val seconds = durationSeconds % 60
+
+                val callDetailsMap = mapOf(
+                    "duration" to String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                )
+
+                result.success(callDetailsMap)
+            } else {
+                result.error("NO_CALL", "No ongoing call found", null)
             }
         } else {
             result.notImplemented()
